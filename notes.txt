@@ -1,0 +1,10 @@
+depth 1:
+#insert drawing
+depth 2:
+#go from left to right
+#specify the node's parent
+#number each node starting from 1 at the top and increasing as you go down
+
+plan
+#do it for my player == O first
+#build minimax tree to depth 3

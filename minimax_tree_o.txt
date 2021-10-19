@@ -1,0 +1,29 @@
+depth 1
+node number 1, parent number 0
+----------
+O   X   X 
+O X X X X 
+X X O X X 
+O X O O X 
+O   O   O 
+----------
+----------
+O   X   X 
+O X X X X 
+X X O X X 
+O X O O X 
+O O O   O 
+----------
+node number 2, parent number 1
+evaluation 1
+move: 4 1
+----------
+O   X   X 
+O X X X X 
+X X O X X 
+O X O O X 
+O   O O O 
+----------
+node number 3, parent number 1
+evaluation 1
+move: 4 3
