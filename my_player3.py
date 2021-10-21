@@ -3,6 +3,7 @@ import sys
 from read import readInput
 from write import writeOutput
 from copy import deepcopy
+import pdb
 
 from host import GO
 
@@ -164,6 +165,7 @@ class MinimaxPlayer():
 
     def read_minimax_tree_recursive(self, root, isMax, depth_max, depth):
         print("minimax tree read recursive called, move: ", root.move)
+        pdb.set_trace()
         if depth == depth_max:
             return root
 
@@ -173,10 +175,11 @@ class MinimaxPlayer():
 
             for node in root.children:
                 maxNodeChild = self.read_minimax_tree_recursive(
-                    node, not isMax, depth_max, depth+1)
-                if maxNodeChild.score > maxNode.score:
+                    node, False, depth_max, depth+1)
+                if maxNodeChild.score >= maxNode.score:
                     maxNode = node
 
+            print("max's score", maxNode.score)
             return maxNode
 
         else:
@@ -185,10 +188,11 @@ class MinimaxPlayer():
 
             for node in root.children:
                 minNodeChild = self.read_minimax_tree_recursive(
-                    node, not isMax, depth_max, depth+1)
-                if minNodeChild.score < minNode.score:
+                    node, True, depth_max, depth+1)
+                if minNodeChild.score <= minNode.score:
                     minNode = node
 
+            print("min's score", minNode.score)
             return minNode
 
     # this will always be in the perspective of my_player
@@ -208,7 +212,7 @@ class MinimaxPlayer():
             return root
 
         current_state = deepcopy(root.state)
-        branching_factor = 5 #observation
+        branching_factor = 4 #observation
         num_branches = 0
         for i in range(current_state.size):
             for j in range(current_state.size):
