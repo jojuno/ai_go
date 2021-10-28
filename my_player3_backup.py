@@ -4,7 +4,6 @@ from read import readInput
 from write import writeOutput
 from copy import deepcopy
 import pdb
-import os
 
 
 class QLearningPlayer():
@@ -513,20 +512,19 @@ questions
 
 tasks
 -account for when both players pass
-    -the opponent can play again even if you pass
 -evaluate only at the leaf nodes
 '''
 
 
 class Node:
     def __init__(self, data):
-        self.go = data
+        self.state = data
         self.move = [-1, -1]
         self.score = 0
         self.children = []
-        # self.num_moves = 0
-        # self.board = []
-        # self.previous_board = []
+        self.num_moves = 0
+        self.board = []
+        self.previous_board = []
 
     def addChild(self, node):
         self.children.append(node)
@@ -535,7 +533,7 @@ class Node:
 class MinimaxPlayer():
     def __init__(self):
         self.type = 'minimax'
-        # self.num_moves = 0
+        self.num_moves = 0
         self.minimax_tree = Node(0)  # make a node with the current state
         self.piece_type = 0
 
@@ -543,7 +541,14 @@ class MinimaxPlayer():
         f = open("num_moves.txt", "w")
         f.write(str(num_moves))
 
+    '''
+    get num moves
+    increment it
+    write it
+    '''
+
     def get_num_moves(self):
+        # Using readlines()
         file = open('num_moves.txt', 'r')
         lines = file.readlines()
 
@@ -577,16 +582,15 @@ class MinimaxPlayer():
         if num_moves_previous == 0 and num_moves_current == 0:
             self.write_num_moves(num_moves)
         elif num_moves_previous == 0:
-            num_moves += 1  # account for the opponent's move
+            num_moves += 1
             self.write_num_moves(num_moves)
         else:
             num_moves = self.get_num_moves()
             num_moves += 1  # account for the opponent's move
             self.write_num_moves(num_moves)
 
-        print("num moves:", self.get_num_moves())
-        # decides the number of depth of the minimax tree
-        turn_number = self.get_num_moves() + 1
+        print("get input, move number ", num_moves + 1)
+
         possible_placements = []
         for i in range(go.size):
             for j in range(go.size):
@@ -596,129 +600,101 @@ class MinimaxPlayer():
         if not possible_placements:
             return "PASS"
         else:
-
+            num_moves += 1
+            self.write_num_moves(num_moves)
             '''
             decrease depth as players make more moves
             repeat tree building at every turn
             '''
             # if num_moves == 21 or num_moves == 22 and :  # could go first or second
-
-            if turn_number >= 5 and turn_number < 25:
+            if num_moves >= 19:
                 # if you go last, you would only need to make a tree of depth 2 (1 for current state)
                 print("building minimax tree")
                 # self.build_minimax_tree(go, piece_type, 1)
                 root = Node(go)
-                # root is at depth 1, and it's the current state
+                root.num_moves = self.get_num_moves()
+                # root is at depth 0 because the build function builds to depth_max - 1
                 if piece_type == 2:  # O, num_moves == even
                     # depth_max = 4  # exits when depth == depth_max
-                    depth_max = 4
-                    depth_start = 0
+                    depth_max = 24 - num_moves + 2
+                    depth_start = 1
                     self.build_minimax_tree_recursive(
                         root, piece_type, depth_max, depth_start)
                     maxNode = self.read_minimax_tree_recursive(
                         root, True, depth_max, depth_start)
-                    # get the child that has the most optimal move
-                    maxChild = Node(0)
-                    for child in maxNode.children:
-                        if child.score >= maxChild.score:
-                            maxChild = child
-                    print("max evaluation: ", maxChild.move,
-                          "move: ", maxChild.move)
-                    num_moves += 1
-                    self.write_num_moves(num_moves)
-                    return maxChild.move
+                    print("max evaluation: ", maxNode.move,
+                          "move: ", maxNode.move)
+                    return maxNode.move
                 else:
-                    # depth_max = 5
-                    depth_max = 4
-                    depth_start = 0
+                    #depth_max = 5
+                    depth_max = 24 - num_moves + 2
+                    depth_start = 1
                     self.build_minimax_tree_recursive(
                         root, piece_type, depth_max, depth_start)
                     maxNode = self.read_minimax_tree_recursive(
                         root, True, depth_max, depth_start)
-                    # get the child that has the most optimal move
-                    maxChild = Node(0)
-                    for child in maxNode.children:
-                        if child.score >= maxChild.score:
-                            maxChild = child
-                    print("max evaluation: ", maxChild.move,
-                          "move: ", maxChild.move)
-                    num_moves += 1
-                    self.write_num_moves(num_moves)
-                    return maxChild.move
+                    print("max evaluation: ", maxNode.move,
+                          "move: ", maxNode.move)
+                    return maxNode.move
+
             else:
-                num_moves += 1
-                self.write_num_moves(num_moves)
                 return random.choice(possible_placements)
 
     def read_minimax_tree_recursive(self, root, isMax, depth_max, depth):
         print("minimax tree read recursive called, move: ",
-              root.move, "is max:", isMax, "score:", root.score)
+              root.move, "is max:", isMax)
         # pdb.set_trace()
         if depth == depth_max:
             return root
 
         if isMax:
-            #maxNode = Node(0)
-            root.score = -100  # negative infinity
+            maxNode = Node(0)
+            maxNode.score = -100  # negative infinity
 
             for node in root.children:
-                maxNode = self.read_minimax_tree_recursive(
+                maxNodeChild = self.read_minimax_tree_recursive(
                     node, not isMax, depth_max, depth+1)
-                if maxNode.score >= root.score:
-                    root.score = maxNode.score
+                if maxNodeChild.score >= maxNode.score:
+                    maxNode = maxNodeChild
 
-            #maxNode.move = root.move
-            print("max's score", root.score,
-                  "length of children:", len(root.children))
-            return root
+            print("max's score", maxNode.score)
+            return maxNode
 
         else:
-            #minNode = Node(0)
-            root.score = +100  # positive infinity
+            minNode = Node(0)
+            minNode.score = +100  # positive infinity
 
             for node in root.children:
-                minNode = self.read_minimax_tree_recursive(
+                minNodeChild = self.read_minimax_tree_recursive(
                     node, not isMax, depth_max, depth+1)
-                if minNode.score <= root.score:
-                    root.score = minNode.score
+                if minNodeChild.score <= minNode.score:
+                    minNode = minNodeChild
 
-            # the returned move should be the root's move, not the child's
-            #minNode.move = root.move
-            print("min's score", root.score,
-                  "length of children:", len(root.children))
-            return root
+            print("min's score", minNode.score)
+            return minNode
 
     # this will always be in the perspective of my_player
     # if it's a terminal state, win: +1, loss: 0, draw: 0.5
 
-    def evaluate(self, node, piece_type, terminal):
-        if terminal:
-            if node.go.judge_winner() == piece_type:
+    def evaluate(self, node, piece_type):
+        if len(node.children) == 0:
+            if node.state.judge_winner() == piece_type:
                 return 15
-            elif node.go.judge_winner() == (3-piece_type):
+            elif node.state.judge_winner() == (3-piece_type):
                 return 0
-            elif node.go.judge_winner() == 0:
+            elif node.state.judge_winner() == 0:
                 return 7.5
-        else:
-            # factors
-            # num pieces captured
-            print("evaluating non-terminal node:", node.go.num_pieces_captured)
-            return node.go.num_pieces_captured
 
     def build_minimax_tree_recursive(self, root, piece_type, depth_max, depth):
-        print("depth", depth, "depth max:", depth_max)
         if depth == depth_max:  # maximum depth to explore
-            print("returning root")
             return root
 
-        current_state = deepcopy(root.go)
+        current_state = deepcopy(root.state)
         branching_factor = 4  # observation
         num_branches = 0
-        valid_place_found = False
         for i in range(current_state.size):
             for j in range(current_state.size):
                 if current_state.valid_place_check(i, j, piece_type, test_check=True):
-                    valid_place_found = True
                     num_branches += 1
                     if num_branches >= branching_factor:
                         pass
@@ -730,48 +706,19 @@ class MinimaxPlayer():
                         next_state.remove_died_pieces(3-piece_type)
                         child = Node(next_state)
                         child.move = [i, j]
-                        # child.num_moves += 1
+                        child.num_moves += 1
                         # pass the node to check if it has any children
-                        print("move", i,
+                        print("depth", depth, ", move", i,
                               j, "piece type", piece_type)
                         # evaluate the state if it's terminal
-                        # added 1 to make it the turn number
-                        if (self.get_num_moves()+1+(depth)) == 24:
+                        if (self.get_num_moves()+(depth-1)) == 24:
                             # evaluate in the perspective of the player
-                            child.score = self.evaluate(
-                                child, self.piece_type, True)
-                        else:
-                            child.score = self.evaluate(
-                                child, self.piece_type, False)
-                        print("evaluation ", child.score)
+                            child.score = self.evaluate(child, self.piece_type)
+                            print("evaluation ", child.score)
                         root.addChild(child)
 
                         self.build_minimax_tree_recursive(
                             child, 3-piece_type, depth_max, depth+1)
-        # exits the loop if there was no valid place; the only action left is to pass
-        # if both players pass, return the node as a terminal state
-        if not valid_place_found:
-            if root.move == [-1, -1]:
-                print("both players passed")
-                root.terminal = True
-                root.score = self.evaluate(root, self.piece_type)
-                return root
-            else:
-                print(str(piece_type), "player passes\n")
-                child = Node(current_state)
-                child.move = [-1, -1]
-                root.addChild(child)
-                self.build_minimax_tree_recursive(
-                    child, 3-piece_type, depth_max, depth+1)
-        '''
-        if current_state.game_end(piece_type, "PASS"):
-            print("my player passes\n")
-            print("depth", depth, ", move", i,
-                  j, "piece type", piece_type)
-            root.score = self.evaluate(root, self.piece_type)
-            print("evaluation ", root.score)
-            return root
-        '''
 
 
 class RandomPlayer():
@@ -804,6 +751,7 @@ if __name__ == "__main__":
     piece_type, previous_board, board = readInput(N)
     go = GO(N)
     go.set_board(piece_type, previous_board, board)
+    # player = RandomPlayer()
     player = MinimaxPlayer()
     player.piece_type = piece_type
     action = player.get_input(go, piece_type)
