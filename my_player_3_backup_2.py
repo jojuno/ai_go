@@ -1,7 +1,7 @@
 import random
 import sys
-from read import readInput, readOutput
-from write import writeOutput, writeNextInput
+from read import readInput
+from write import writeOutput
 from copy import deepcopy
 import pdb
 import os
@@ -540,29 +540,14 @@ tasks
 
 
 class Node:
-    
-    def __init__(self):
-        self.board = None
-        #move that resulted in this state
-        self.move = [-1, -1]
-        self.score = -100
-        #player who is making the next move
-        self.piece_type = 0
-        self.terminal = False
-        self.children = []
-    
-    
-    '''
-    def __init__(self, data, move, score, piece_type):
+    def __init__(self, data):
         self.go = data
         self.move = [-1, -1]
-        self.score = score
-        self.piece_type = 0
+        self.score = -100
         self.children = []
         # self.num_moves = 0
         # self.board = []
         # self.previous_board = []
-    '''
 
     def addChild(self, node):
         self.children.append(node)
@@ -572,7 +557,7 @@ class MinimaxPlayer():
     def __init__(self):
         self.type = 'minimax'
         # self.num_moves = 0
-        self.minimax_tree = Node()  # make a node with the current state
+        self.minimax_tree = Node(0)  # make a node with the current state
         self.piece_type = 0
 
     def write_num_moves(self, num_moves):
@@ -599,8 +584,6 @@ class MinimaxPlayer():
     '''
 
     def get_input(self, go, piece_type):
-
-        test = True
 
         # determine the number of moves that've been played
         num_moves_previous = 0
@@ -635,18 +618,7 @@ class MinimaxPlayer():
 
         #don't place pieces on the third line in the beginning
         #assume no pieces would be captured
-        if test == True:
-            current_node = Node()
-            current_node.board = deepcopy(go)
-            current_node.move = [-1, -1]
-            current_node.piece_type = piece_type
-            #print("move:", (self.build_minimax_tree(current_node, 2, -101, 101, True)).move)
-            return (self.build_minimax_tree(current_node, 2, -101, 101, True)).move
-            #print("next move:", current_node.next_move)
-            #return [-1, -1]
-
-
-        elif turn_number < 7:
+        if turn_number < 7:
             possible_placements = []
             for i in range(1, go.size-1):
                 for j in range(1, go.size-1):
@@ -671,7 +643,7 @@ class MinimaxPlayer():
                 maxNode = self.read_minimax_tree_recursive(
                     root, True, depth_max, depth_start)
                 # get the child that has the most optimal move
-                #maxChild = Node(0)
+                maxChild = Node(0)
                 for child in maxNode.children:
                     if child.score >= maxChild.score:
                         maxChild = child
@@ -690,7 +662,7 @@ class MinimaxPlayer():
                 maxNode = self.read_minimax_tree_recursive(
                     root, True, depth_max, depth_start)
                 # get the child that has the most optimal move
-                #maxChild = Node(0)
+                maxChild = Node(0)
                 for child in maxNode.children:
                     if child.score >= maxChild.score:
                         maxChild = child
@@ -700,32 +672,6 @@ class MinimaxPlayer():
                 self.write_num_moves(num_moves)
                 return maxChild.move
 
-    #prune
-    def alpha_beta_prune(self, node, depth, alpha, beta, isMax):
-        if (depth == 0 or node.terminal):
-            return node.score
-        if isMax:
-            score = -101
-            for child in node.children:
-                score = max(score, self.alpha_beta_prune(child, depth - 1, alpha, beta, False))
-                if score >= beta:
-                    break #beta cut off
-                alpha = max(alpha, score)
-            return score
-        else:
-            score = 101
-            for child in node.children:
-                score = min(score, self.alpha_beta_prune(child, depth - 1, alpha, beta, True))
-                if score <= alpha:
-                    break #alpha cutoff
-                beta = min(beta, score)
-            return score
-    
-    #def alpha_beta_prune_2()
-
-
-
-
     def read_minimax_tree_recursive(self, root, isMax, depth_max, depth):
         print("minimax tree read recursive called, move: ",
               root.move, "is max:", isMax, "score:", root.score)
@@ -734,6 +680,7 @@ class MinimaxPlayer():
             return root
 
         if isMax:
+            #maxNode = Node(0)
             root.score = -100  # negative infinity
 
             for node in root.children:
@@ -768,8 +715,6 @@ class MinimaxPlayer():
     # connections
     # the difference in the number of pieces; would account for captures
     # the eye
-
-    '''
     def evaluate(self, node, piece_type, terminal):
         if terminal:
             if node.go.judge_winner() == piece_type:
@@ -781,117 +726,14 @@ class MinimaxPlayer():
         else:
             # factors
             # difference in the number of stones on the board
-            
+            '''
             print("evaluating non-terminal node:", node.go.num_pieces_captured)
             return node.go.num_pieces_captured
-            
+            '''
             print("evaluating non-terminal node:", node.go.score(piece_type) - node.go.score(3-piece_type))
             return node.go.score(piece_type) - node.go.score(3-piece_type)
-    '''
 
-    #def evaluate(self, node):
-
-
-
-    
-    def build_minimax_tree(self, node, depth, alpha, beta, isMax):
-        print("depth:", depth)
-        if depth == 0 or node.terminal:
-            #node.terminal = True
-            #node.score = self.evaluate(node)
-            node.score = random.randint(1, 20)
-            print("terminal node's score:", node.score, "move:", node.move)
-            return node
-        
-
-
-        if isMax:
-            branching_factor = 5
-            num_branches = 0
-            node.score = -102
-            #for child in node.children:
-
-            for i in range(node.board.size):
-                for j in range(node.board.size):
-                    if node.board.valid_place_check(i, j, node.piece_type):
-                        num_branches += 1
-                        child = deepcopy(node)
-                        child.move = [i, j]
-                        child.piece_type = (3-node.piece_type)
-                        child.board.place_chess(i, j, node.piece_type)
-                        child.board.remove_died_pieces(3-node.piece_type)
-                        if num_branches < branching_factor:
-                            node.addChild(child)
-
-            for child in node.children:
-                if node.score < (self.build_minimax_tree(child, depth - 1, alpha, beta, False)).score:
-                    node.move = child.move
-                    node.score = (self.build_minimax_tree(child, depth - 1, alpha, beta, False)).score
-                
-                if node.score >= beta:
-                    print("node.score:", node.score, "beta:", beta, "break")
-                    break
-                alpha = max(alpha, node.score)
-            print("max score:", node.score, "move:", node.move)
-            return node
-            
-        else:
-            branching_factor = 5
-            num_branches = 0
-            node.score = 102
-
-            for i in range(node.board.size):
-                for j in range(node.board.size):
-                    if node.board.valid_place_check(i, j, node.piece_type):
-                        num_branches += 1
-                        child = deepcopy(node)
-                        child.move = [i, j]
-                        child.piece_type = (3-node.piece_type)
-                        child.board.place_chess(i, j, node.piece_type)
-                        child.board.remove_died_pieces(3-node.piece_type)
-                        if num_branches < branching_factor:
-                            
-                            node.addChild(child)
-
-            for child in node.children:
-                if node.score > (self.build_minimax_tree(child, depth-1, alpha, beta, True)).score:
-                    node.move = child.move
-                    node.score = (self.build_minimax_tree(child, depth-1, alpha, beta, True)).score
-                if node.score <= alpha:
-                    print("node.score:", node.score, "alpha:", alpha, "break")
-                    break
-                beta = min(beta, node.score)
-            print("min score:", node.score, "move:", node.move)
-            return node
-            
-        
-        for i in range(node.board.size):
-            for j in range(node.board.size):
-                if node.board.valid_place_check(i, j, node.piece_type):
-                    num_branches += 1
-                    if num_branches >= branching_factor:
-                        pass
-                    else:
-                        child = Node()
-                        child.move = [i, j]
-                        child.board = deepcopy(node.board)
-                        child.board.place_chess(i, j, piece_type)
-                        child.board.remove_died_pieces(3-piece_type)
-                        #prune: don't add the child if ??? condition
-                        node.addChild(child)
-                        self.build_minimax_tree(child, depth-1, not isMax)
-                        
-                        '''
-                        if child.score > node.score:
-                            node.score = child.score
-                            node.next_move = child.move
-                            '''
-                    #print("node's score:", node.score, "node's move:", node.next_move)
-    
-
-                        
-
-
+    #def build_minimax_tree_recursive_2
 
     def build_minimax_tree_recursive(self, root, piece_type, depth_max, depth, previous_player_passed):
         print("depth", depth, "depth max:", depth_max)
@@ -928,11 +770,9 @@ class MinimaxPlayer():
                             # evaluate in the perspective of the player
                             child.score = self.evaluate(
                                 child, self.piece_type, True)
-                        elif (depth == depth_max - 1):
+                        else:
                             child.score = self.evaluate(
-                            child, self.piece_type, False)
-                            #child.score = self.evaluate(
-                            #    child, self.piece_type, False)
+                                child, self.piece_type, False)
                         print("evaluation ", child.score)
                         root.addChild(child)
 
