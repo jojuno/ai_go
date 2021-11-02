@@ -1,4 +1,4 @@
-# ai_go
+# artificial intelligence GO agent
 minimax, alpha-beta pruning
 plays Go on a 5x5 automatically against another agent. displays the result after two games.
 
